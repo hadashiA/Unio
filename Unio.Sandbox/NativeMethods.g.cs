@@ -16,14 +16,14 @@ namespace CsBindgen
 
 
 
-        [DllImport(__DllName, EntryPoint = "delete_read_result", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
-        public static extern void delete_read_result(ReadResult value);
+        [DllImport(__DllName, EntryPoint = "unio_read_result_delete", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        public static extern void unio_read_result_delete(ReadResult value);
 
-        [DllImport(__DllName, EntryPoint = "delete_byte_buffer", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
-        public static extern void delete_byte_buffer(ByteBuffer bytes);
+        [DllImport(__DllName, EntryPoint = "unio_byte_buffer_delete", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        public static extern void unio_byte_buffer_delete(ByteBuffer bytes);
 
-        [DllImport(__DllName, EntryPoint = "delete_error", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
-        public static extern void delete_error(UnioError* error);
+        [DllImport(__DllName, EntryPoint = "unio_boxed_error_delete", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        public static extern void unio_boxed_error_delete(UnioError* error);
 
         [DllImport(__DllName, EntryPoint = "unio_file_read_to_end", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern ReadResult unio_file_read_to_end(ushort* path, int path_length);
@@ -49,7 +49,6 @@ namespace CsBindgen
     [StructLayout(LayoutKind.Sequential)]
     internal unsafe partial struct UnioError
     {
-        public String message;
     }
 
 

@@ -3,15 +3,25 @@
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using CsBindgen;
 
 unsafe
 {
     var path = "/Users/hadashi/tmp/log";
-    fixed (char* pathPtr = path)
+    ReadResult result = default;
+    try
     {
-        var result = CsBindgen.NativeMethods.unio_file_read_to_end((ushort*)pathPtr, path.Length);
+        fixed (char* pathPtr = path)
+        {
+            result = CsBindgen.NativeMethods.unio_file_read_to_end((ushort*)pathPtr, path.Length);
+        }
+
         var decoded = System.Text.Encoding.UTF8.GetString(result.bytes.AsSpan());
         Console.WriteLine(decoded);
+    }
+    finally
+    {
+        NativeMethods.unio_read_result_delete(result);
     }
 }
 

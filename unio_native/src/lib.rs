@@ -17,12 +17,10 @@ pub struct ReadResult {
 
 #[no_mangle]
 pub extern "C" fn unio_read_result_delete(value: ReadResult) {
-    unsafe {
-        if !value.error.is_null() {
-            unio_error_delete(value.error);
-        }
-        unio_byte_buffer_delete(value.bytes);
+    if !value.error.is_null() {
+        unio_boxed_error_delete(value.error);
     }
+    unio_byte_buffer_delete(value.bytes);
 }
 
 #[no_mangle]
@@ -31,31 +29,36 @@ pub extern "C" fn unio_byte_buffer_delete(bytes: ByteBuffer) {
 }
 
 #[no_mangle]
-pub extern "C" fn unio_error_delete(error: *mut UnioError) {
-    unsafe { Box::from_raw(error) };
+pub extern "C" fn unio_boxed_error_delete(error: *mut UnioError) {
+    unsafe { let _ = Box::from_raw(error); };
 }
 
 #[no_mangle]
 pub unsafe extern "C" fn unio_file_read_to_end(
     path: *const u16,
-    path_length: i32) -> ReadResult {
+    path_length: i32,
+) -> ReadResult {
 
-    let result = read_file(path, path_length);
+    let result = read_file_by_utf16_path(path, path_length);
     match result {
         Ok(bytes) => ReadResult {
-            bytes,
             error: std::ptr::null_mut(),
+            bytes,
         },
         Err(error) => ReadResult {
-            bytes: ByteBuffer::default(),
             error: Box::into_raw(Box::new(error)),
+            bytes: ByteBuffer::default(),
         }
     }
 }
 
-fn read_file(path: *const u16, path_length: i32) -> Result<ByteBuffer, UnioError> {
+fn read_file_by_utf16_path(path: *const u16, path_length: i32) -> Result<ByteBuffer, UnioError> {
+    let path_length: usize = path_length
+        .try_into()
+        .map_err(|_| "path length negative or overflowed")?;
+
     let path = CSharpString::new(path, path_length);
-    let path = unsafe { path.to_string()? };
+    let path = path.to_string()?;
 
     let mut file = File::open(path)?;
     let file_size = file.metadata()?.len();
