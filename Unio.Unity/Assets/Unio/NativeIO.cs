@@ -1,43 +1,94 @@
 using System;
-using System.Threading;
-using System.Threading.Tasks;
 using Unity.Collections;
+using Unity.Collections.LowLevel.Unsafe;
+using Unity.IO.LowLevel.Unsafe;
 
 namespace Unio
 {
-    public struct ReadResult : IDisposable
+    public enum AllocationType
     {
-        public NativeArray<byte> Content;
-        public bool FromUnioNative;
+        UnityUnsafeUtility,
+        UnioNative,
+    }
 
-        public ReadResult()
+    public readonly unsafe struct BufferHandle : IDisposable
+    {
+        public readonly AllocationType AllocationType;
+        public readonly int Length;
+        readonly byte* ptr;
+
+        public BufferHandle(byte* ptr, int length, AllocationType allocationType)
         {
+            this.ptr = ptr;
+            Length = length;
+            AllocationType = allocationType;
+        }
+
+        public ReadOnlySpan<byte> AsSpan() => new(ptr, Length);
+
+        public NativeArray<byte> AsNativeArray()
+        {
+            var array = NativeArrayUnsafeUtility.ConvertExistingDataToNativeArray<byte>(ptr, Length, Allocator.None);
+
+#if ENABLE_UNITY_COLLECTIONS_CHECKS
+            NativeArrayUnsafeUtility.SetAtomicSafetyHandle(ref array, AtomicSafetyHandle.GetTempMemoryHandle());
+#endif
+            return array;
         }
 
         public void Dispose()
         {
-            if (FromUnioNative)
+            switch (AllocationType)
             {
-                // NativeMethods.free_
-                throw new NotImplementedException();
+                case AllocationType.UnityUnsafeUtility:
+                    UnsafeUtility.Free(ptr, Allocator.None);
+                    break;
+                case AllocationType.UnioNative:
+                    // NativeMethods.unio_byte_buffer_delete(Content);
+                    throw new NotImplementedException();
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
             }
-            else
-            {
-
-            }
-            // TODO release managed resources here
         }
     }
 
-    public static class NativeIO
+    public static unsafe class NativeIO
     {
-        public static Task<NativeArray<byte>> ReadAllBytesOnMainThreadAsync(string path, CancellationToken cancellation = default)
-        {
-        }
+        [ThreadStatic]
+        static ReadCommand* readCommandBufferOne;
 
-        public static Task<FileHandle> ReadAllBytesAsync(string path, CancellationToken cancellation = default)
+        public static BufferHandle ReadFile(string filePath)
         {
-            return Task.Run()
+            // var fileInfo = new FileInfo(filePath);
+            // var size = fileInfo.Length;
+
+            FileInfoResult fileInfoResult;
+            var fileInfoHandle = AsyncReadManager.GetFileInfo(filePath, &fileInfoResult);
+            fileInfoHandle.JobHandle.Complete();
+
+            var size = (int)fileInfoResult.FileSize;
+
+            var readCommand = new ReadCommand
+            {
+                Buffer = (byte*)UnsafeUtility.Malloc(size, UnsafeUtility.AlignOf<byte>(), Allocator.Persistent),
+                Offset = 0,
+                Size = size
+            };
+
+            if (readCommandBufferOne == null)
+            {
+                readCommandBufferOne = (ReadCommand*)UnsafeUtility.Malloc(
+                    sizeof(ReadCommand) * 1,
+                    UnsafeUtility.AlignOf<ReadCommand>(),
+                    Allocator.Persistent);
+            }
+            readCommandBufferOne[0] = readCommand;
+
+            var readHandle = AsyncReadManager.Read(filePath, readCommandBufferOne, 1);
+            readHandle.JobHandle.Complete();
+
+            return new BufferHandle((byte*)readCommand.Buffer, size, AllocationType.UnityUnsafeUtility);
         }
     }
 }

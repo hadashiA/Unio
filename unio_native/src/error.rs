@@ -2,6 +2,7 @@ use std::io;
 use std::string::FromUtf16Error;
 use crate::buffer::CSharpString;
 
+#[repr(C)]
 #[derive(Debug)]
 pub struct UnioError {
     message: CSharpString,

@@ -5,6 +5,6 @@ fn main() {
         .input_extern_file("src/error.rs")
         .csharp_dll_name("unio")
         // .generate_csharp_file("../Unio.Unity/Assets/Unio/Generated/NativeMethods.cs")
-        .generate_csharp_file("../Unio.Sandbox/NativeMethods.g.cs")
+        .generate_csharp_file("../Unio.Unity/Assets/Unio/NativeMethods.g.cs")
         .unwrap();
 }
