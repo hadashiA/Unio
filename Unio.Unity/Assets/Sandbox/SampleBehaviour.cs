@@ -18,7 +18,7 @@ namespace UnityNio
             Task.Run(() =>
             {
                 UnityEngine.Debug.Log($"22222 {Thread.CurrentThread.ManagedThreadId}");
-                using var buffer = NativeIO.ReadFile("/Users/hadashi/tmp/log");
+                using var buffer = NativeFile.ReadFile("https://google.com");
                 this.str = System.Text.Encoding.UTF8.GetString(buffer.AsSpan());
             });
         }
