@@ -20,8 +20,7 @@ In addition, Unio provides NativeArray extensions for interoperability with mode
 
 ## Performance
 
-Sample of a file of about 1mb read 10 iterations.
-
+Sample with about 1mb file reading 10 iterations.
 
 |                   | Time    | GC Alloc size (kb) |
 |-------------------|---------|--------------------|
@@ -29,7 +28,7 @@ Sample of a file of about 1mb read 10 iterations.
 | `System.IO.File`  | 1.25ms  | 9.240 kb           |
 
 
-Sample with about 1.7MB serialization in `System.Text.Json` 10 iterations.
+Sample with about 1MB serialization in `System.Text.Json` 10 iterations.
 
 |                                    | Time    | GC Alloc size (kb) |
 |------------------------------------|---------|--------------------|
