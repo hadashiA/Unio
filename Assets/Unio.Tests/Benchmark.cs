@@ -10,6 +10,7 @@ using Unity.PerformanceTesting;
 using UnityEngine;
 using MemoryPack;
 using UnityEngine.Profiling;
+using UnityEngine.Scripting;
 
 namespace Unio.Benchmark
 {
@@ -77,7 +78,7 @@ namespace Unio.Benchmark
     public class Benchmark
     {
         const int Warmup = 5;
-        const int Iterations = 10;
+        const int Iterations = 1;
         const int InitialBufferSize = 1024;
 
         // [Test]
@@ -191,6 +192,7 @@ namespace Unio.Benchmark
 
             {
                 GC.Collect();
+
                 var allocBytesBefore = Profiler.GetMonoUsedSizeLong();
                 using (Measure.Scope("System.IO.File"))
                 {
@@ -229,7 +231,6 @@ namespace Unio.Benchmark
                 var arrayBufferWriter = new ArrayBufferWriter<byte>(InitialBufferSize);
                 var jsonWriter = new Utf8JsonWriter(arrayBufferWriter);
                 JsonSerializer.Serialize(jsonWriter, data, typeof(D), SourceGenerationContext.Default);
-                UnityEngine.Debug.Log($"JsonSerializeArrayBufferWriter: {arrayBufferWriter.WrittenCount}");
             }
 
             void JsonSerializeNativeArrayBufferWriter(D data)
@@ -237,7 +238,6 @@ namespace Unio.Benchmark
                 var arrayBufferWriter = new NativeArrayBufferWriter<byte>(InitialBufferSize, Allocator.Temp);
                 var jsonWriter = new Utf8JsonWriter(arrayBufferWriter);
                 JsonSerializer.Serialize(jsonWriter, data, typeof(D), SourceGenerationContext.Default);
-                UnityEngine.Debug.Log($"JsonSerializeNativeArrayBufferWriter: {arrayBufferWriter.WrittenCount}");
             }
 
             var data = D.CreateTestData();
@@ -289,7 +289,6 @@ namespace Unio.Benchmark
                 var state = MemoryPackWriterOptionalStatePool.Rent(MemoryPackSerializerOptions.Default);
                 var writer = new MemoryPackWriter<ArrayBufferWriter<byte>>(ref arrayBufferWriter, state);
                 MemoryPackSerializer.Serialize(ref writer, in data);
-                UnityEngine.Debug.Log($"MemoryPackSerializeArrayBufferWriter: {arrayBufferWriter.WrittenCount}");
             }
 
             void MemoryPackSerializeNativeArrayBufferWriter(D data)
@@ -298,7 +297,6 @@ namespace Unio.Benchmark
                 var state = MemoryPackWriterOptionalStatePool.Rent(MemoryPackSerializerOptions.Default);
                 var writer = new MemoryPackWriter<NativeArrayBufferWriter<byte>>(ref arrayBufferWriter, state);
                 MemoryPackSerializer.Serialize(ref writer, in data);
-                UnityEngine.Debug.Log($"MemoryPackSerializeNativeArrayBufferWriter: {arrayBufferWriter.WrittenCount}");
             }
 
             var data = D.CreateTestData();
