@@ -13,7 +13,11 @@
     "excludePlatforms": [],
     "allowUnsafeCode": false,
     "overrideReferences": true,
-    "precompiledReferences": [],
+    "precompiledReferences": [
+        "System.Text.Json.dll",
+        "MemoryPack.Core.dll",
+        "System.Text.Encodings.Web.dll"
+    ],
     "autoReferenced": false,
     "defineConstraints": [
         "UNITY_INCLUDE_TESTS"

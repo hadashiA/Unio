@@ -4,18 +4,19 @@ Unio (short for unity native I/O) is a small utility set of I/O using native mem
 
 A drop-in replacement for the `System.IO.File` you are familiar with is provided.
 
-| Feature                    | Unio.NativeFile          | System.IO.File                 |
-|----------------------------|--------------------------|:-------------------------------|
-| Read file as bytes         | `File.ReadAllBytes`      | `NativeFile.ReadAllBytes`      |
-| Read file as bytes (async) | `File.ReadAllBytesAsync` | `NativeFile.ReadAllBytesAsync` |
-| Write file                 | `File.WriteAllBytes`     | `NativeFile.ReadAllBytes`      |
-| Write file (async)         | `File.WriteAllBytes`     | `NativeFile.ReadAllBytesAsync` |
+| Unio.NativeFile                        | Description                                                       | 
+|----------------------------------------|-------------------------------------------------------------------|
+| `NativeFile.ReadAllBytes`              | `NativeArray<byte>` version of `File.ReadAllBytes`                | 
+| `NativeFile.ReadAllBytesAsync`| `Awaitalbe<NativeArray<byte>>` version of `File.ReadAllBytesAsync` | 
+|                              | `File.WriteAllBytes`                                              | 
+| Write file (async)                     | `File.WriteAllBytes`                                              | 
 
 In addition, Unio provides NativeArray extensions for interoperability with memory-consuming C# APIs.
 
-| Feature                                            | NativeArray Extensions         | 
-|:---------------------------------------------------|--------------------------------|
-| Convert `NativeArray<T>` to `Memory<T>` | `NativeArray<byte>.AsMemory()` |
+| Unio                        | NativeArray Extensions                                 | 
+|:----------------------------|--------------------------------------------------------|
+| `NativeArray<T>.AsMemory()` | `NativeArray<byte>.AsMemory()`                         |
+| `NativeArrayBufferWriter<T>` | `NativeArray<byte>` version of `ArrayBufferWriter<T>`. |
 
 
 ## Motivation
