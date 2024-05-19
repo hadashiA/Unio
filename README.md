@@ -26,7 +26,7 @@ Sample of a file of about 1mb read 10 iterations.
 |                   | Time    | GC Alloc size (kb) |
 |-------------------|---------|--------------------|
 | `Unio.NativeFile` | 1.13 ms | 0 kb               |
-| `System.IO>File`  | 1.25ms  | 9.240 kb           |
+| `System.IO.File`  | 1.25ms  | 9.240 kb           |
 
 
 Sample with about 1.7MB serialization in `System.Text.Json` 10 iterations.
