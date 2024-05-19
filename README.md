@@ -4,25 +4,54 @@ Unio (short for unity native I/O) is a small utility set of I/O using native mem
 
 A drop-in replacement for the `System.IO.File` you are familiar with is provided.
 
-| Unio.NativeFile                        | Description                                                       | 
-|----------------------------------------|-------------------------------------------------------------------|
-| `NativeFile.ReadAllBytes`              | `NativeArray<byte>` version of `File.ReadAllBytes`                | 
-| `NativeFile.ReadAllBytesAsync`| `Awaitalbe<NativeArray<byte>>` version of `File.ReadAllBytesAsync` | 
-|                              | `File.WriteAllBytes`                                              | 
-| Write file (async)                     | `File.WriteAllBytes`                                              | 
+| Feature                         | Description                                              | 
+|---------------------------------|----------------------------------------------------------|
+| `NativeFile.ReadAllBytes`       | `NativeArray<byte>` version of `File.ReadAllBytes`.      | 
+| `NativeFile.ReadAllBytesAsync`  | `NativeArray<byte>` version of `File.ReadAllBytesAsync`. | 
+| `NativeFile.WriteAllBytes`      | `NativeArray<byte>` version of `File.WriteAllBytes`.     | 
+| `NativeFile.WriteAllBytesAsync` | `NativeArray<byte>` version of `File.WriteAllBytesAsync` | 
 
-In addition, Unio provides NativeArray extensions for interoperability with memory-consuming C# APIs.
+In addition, Unio provides NativeArray extensions for interoperability with modern memory-consuming C# APIs.
 
-| Unio                        | NativeArray Extensions                                 | 
-|:----------------------------|--------------------------------------------------------|
-| `NativeArray<T>.AsMemory()` | `NativeArray<byte>.AsMemory()`                         |
+| Feature                      | Description                                            | 
+|:-----------------------------|--------------------------------------------------------|
+| `NativeArray<T>.AsMemory()`  | Convert `NativeArray<T>` to `System.Buffers.Memory<T>` |
 | `NativeArrayBufferWriter<T>` | `NativeArray<byte>` version of `ArrayBufferWriter<T>`. |
+
+## Performance
+
+Sample of a file of about 1mb read 10 iterations.
+
+
+|                   | Time    | GC Alloc size (kb) |
+|-------------------|---------|--------------------|
+| `Unio.NativeFile` | 1.13 ms | 0 kb               |
+| `System.IO>File`  | 1.25ms  | 9.240 kb           |
+
+
+Sample with about 1.7MB serialization in `System.Text.Json` 10 iterations.
+
+|                                    | Time    | GC Alloc size (kb) |
+|------------------------------------|---------|--------------------|
+| `Unio.NativeArrayBufferWriter`     | 3.26 ms | 204 kb             |
+| `System.Buffers.ArrayBufferWriter` | 3.31ms  | 3.000 kb           |
+
+
+Sample with about 1MB serialization in `Cysharp.MemoryPack` 10 iterations.
+
+
+|                                    | Time    | GC Alloc size (kb)   |
+|------------------------------------|---------|----------------------|
+| `Unio.NativeArrayBufferWriter`     | 8.99 ms | 206 kb               |
+| `System.Buffers.ArrayBufferWriter` | 8.98ms | 3.560 kb             |
+
 
 
 ## Motivation
 
 Unity has the ability to allocate native area memory directly, instead of using C#'s GC managed heap.
 https://docs.unity3d.com/Manual/JobSystemNativeContainer.html
+
 
 We want to treat the deserialization result as C# memory, but the raw data before deserialization is not needed on the C# side.
 
