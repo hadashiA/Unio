@@ -1,0 +1,12 @@
+{
+  "name": "jp.hadashikick.unio",
+  "displayName": "Unio",
+  "version": "0.0.1",
+  "unity": "2021.3",
+  "description": "A small utilities for I/O using native memory areas",
+  "keywords": ["io", "memory", "native"],
+  "license": "MIT",
+  "documentationUrl": "https://github.com/hadashiA/Unio",
+  "changelogUrl": "https://github.com/hadashiA/Unio/releases",
+  "licensesUrl": "https://github.com/hadashiA/Unio/blob/master/LICENSE"
+}
