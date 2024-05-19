@@ -1,3 +1,4 @@
+#nullable enable
 using System;
 using System.Buffers;
 using Unity.Collections;
@@ -10,6 +11,8 @@ namespace Unio
         public int WrittenCount => offset;
         public int Capacity => buffer.Length;
         public int FreeCapacity => buffer.Length - offset;
+
+        NativeArrayMemoryManager<T> memoryManager;
 
         public unsafe NativeArray<T> WrittenBuffer
         {
@@ -35,11 +38,12 @@ namespace Unio
         readonly Allocator allocator;
         readonly NativeArrayOptions options;
 
-        public NativeArrayBufferWriter(int initialBufferLength, Allocator allocator, NativeArrayOptions options = NativeArrayOptions.UninitializedMemory)
+        public unsafe NativeArrayBufferWriter(int initialBufferLength, Allocator allocator, NativeArrayOptions options = NativeArrayOptions.UninitializedMemory)
         {
-            buffer = new NativeArray<T>(initialBufferLength, allocator, options);
             this.allocator = allocator;
             this.options = options;
+            buffer = new NativeArray<T>(initialBufferLength, allocator, options);
+            memoryManager = new NativeArrayMemoryManager<T>((T*)buffer.GetUnsafePtr(), initialBufferLength);
         }
 
         public void Advance(int count)
@@ -58,15 +62,16 @@ namespace Unio
 
             var ptr = (T*)buffer.GetUnsafeReadOnlyPtr();
             ptr += sizeof(T) * offset;
-            // TODO: Reduce allocation
-            var memoryManager = new NativeArrayMemoryManager<T>(ptr, sizeHint);
+            // var memoryManager = new NativeArrayMemoryManager<T>(ptr, sizeHint);
+            memoryManager.Ptr = ptr;
+            memoryManager.Length = buffer.Length - offset;
             return memoryManager.Memory;
         }
 
         public Span<T> GetSpan(int sizeHint = 0)
         {
             CheckAndResizeBuffer(sizeHint);
-            return buffer.AsSpan().Slice(offset, sizeHint);
+            return buffer.AsSpan().Slice(offset);
         }
 
         public void ResetWrittenCount()

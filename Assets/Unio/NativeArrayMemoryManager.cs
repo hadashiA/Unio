@@ -15,27 +15,22 @@ namespace Unio
 
     unsafe class NativeArrayMemoryManager<T> : MemoryManager<T> where T : unmanaged
     {
-        public int Length { get; private set; }
-        T* pointer;
+        public T* Ptr { get; set; }
+        public int Length { get; set; }
 
         public NativeArrayMemoryManager(NativeArray<T> nativeArray)
             : this((T*)nativeArray.GetUnsafeReadOnlyPtr(), nativeArray.Length)
         {
         }
 
-        public NativeArrayMemoryManager(T* pointer, int length)
+        public NativeArrayMemoryManager(T* ptr, int length)
         {
             if (length < 0) throw new ArgumentOutOfRangeException(nameof(length));
-            this.pointer = pointer;
+            Ptr = ptr;
             Length = length;
         }
 
-        public void AddOffset(int offset)
-        {
-            pointer += offset * sizeof(T);
-        }
-
-        public override Span<T> GetSpan() => new(pointer, Length);
+        public override Span<T> GetSpan() => new(Ptr, Length);
 
         /// <summary>
         /// Provides access to a pointer that represents the data (note: no actual pin occurs)
@@ -46,7 +41,7 @@ namespace Unio
             {
                 throw new ArgumentOutOfRangeException(nameof(Length));
             }
-            return new MemoryHandle(pointer + elementIndex);
+            return new MemoryHandle(Ptr + elementIndex);
         }
 
         /// <summary>
