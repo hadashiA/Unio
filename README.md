@@ -23,19 +23,20 @@ In addition, Unio provides NativeArray extensions for interoperability with mode
 
 Motivation:
 
-Unity has the ability to allocate native area memory directly, instead of using C#'s GC managed heap. https://docs.unity3d.com/Manual/JobSystemNativeContainer.html This can load Assets such as Mesh, Texture, and Addressable into its native memory area, but Unio can be used to extend this use.
-
 Overloading the Managed GC area in C# leads to a performance penalty for the game.
 - The GC Collect phase stops all managed threads.
 - The managed memory area is expanded, the application's maximum memory usage tends to increase.
- 
+
 Therefore, it is an important optimization to use the native allocator for memory that does not need to be handled by C#.
 
-For example, serialization/deserialization of dynamic data is a typically example.
+Unity has the ability to allocate native area memory directly, instead of using C#'s GC managed heap. 
+https://docs.unity3d.com/Manual/JobSystemNativeContainer.html 
+Usually it can load Assets such as Mesh, Texture, and Addressable into its native memory area, but Unio can be used to extend this use.
+
+It is effective if data to be read/written dynamically can also be treated as Native Memory area.
+One typical example is Serialization.
 Modern serializers (such as [System.Text.Json](https://learn.microsoft.com/dotnet/api/system.text.json), [MessagePack-CSharp](https://github.com/Cysharp/MessagePack-CSharp), [MemoryPack](https://github.com/Cysharp/MemoryPack), [VYaml](https://github.com/hadashiA/VYaml), etc) can take `ReadOnlySequence<byte>` or `IBufferWriter<byte>` as input. Unio is designed to integrate with these.
 We want to treat the deserialization result as C# memory, but the raw data before deserialization is not needed on the C# side.
-
-Unio can be used to reduce GC managed heap usage.
 
 ![](./docs/gc_bench.png)
 
@@ -61,10 +62,10 @@ https://github.com/hadashiA/Unio.git?path=/Assets/Unio#0.0.1
 
 ### Read file
 
-`NativeFile.ReadAllBytes` / `.ReadAllBytesAsync` is used to read the contents of a file at once into Unity's Native memory area.
+`NativeFile.ReadAllBytes` / `.ReadAllBytesAsync` is used to read the file contents at once into Unity's Native memory area.
 
 ```csharp
-// Read file with sync
+// Read file
 // The return value is a NativeArray<byte>. Dispose when you have finished using it.
 using var bytes = NativeFile.ReadAllBytes("/path/to/file");
 
@@ -73,13 +74,12 @@ using var bytes = NativeFile.ReadAllBytes("/path/to/file");
 using var bytes = await NativeFile.ReadAllBytesAsync("/path/to/file", cancellationToken: cancellationToken);
 ```
 
-Internally, this uses [AsyncReadManager](https://docs.unity3d.com/ScriptReference/Unity.IO.LowLevel.Unsafe.AsyncReadManager.html).
-By default, it performs a synchronous wait on the ThreadPool to optimize for latency.
+This is just an internal, [AsyncReadManager](https://docs.unity3d.com/ScriptReference/Unity.IO.LowLevel.Unsafe.AsyncReadManager.html). So it works on any platform.
 
-If you wish to change this behavior, you may supply a SynchonizationStrategy argument.
+By default, `ReadAllBytesAsync` performs a synchronous wait on the ThreadPool to optimize for latency.
+If you want to change this behavior, you may supply a `SynchonizationStrategy` argument.
 
 ```csharp
-// The return value is a `UnityEngine.Awaitable<NativeArray<byte>>`.
 using var bytes = await NativeFile.ReadAllBytesAsync("/path/to/file", SynchonizationStrategy.PlayerLoop);
 ```
 
@@ -93,7 +93,7 @@ using var bytes = await NativeFile.ReadAllBytesAsync("/path/to/file", Synchoniza
 > [!NOTE]
 > If you are using Unity less than 2023.2, the async method will use `Task<T>`, not `Awaitalbe<T>`.
 
-In addition, `AsMemory()` can be used to work with modern C# APIs.
+In addition, a Unio extensions of `NativeArray<byte>.AsMemory()` can be used to work with modern C# APIs.
 
 ```csharp
 using var bytes = NativeFile.ReadAllBytes("/path/to/file");
@@ -104,9 +104,6 @@ var deserializedData = MessagePackSerializer.Deserialize<MyData>(bytes.AsMemory(
 // MessagePack-CSharp
 var deserializedData = MessagePackSerializer.Deserialize<MyData>(bytes.AsMemory());
 
-// MemoryPack
-var deserializedData = MemoryPackSerializer.Deserialize<MyData>(bytes.AsMemory());
-
 // VYaml
 var deserializedData = YamlSerializer.Deserialize<MyData>(bytes.AsMemory());
 ```
@@ -115,49 +112,59 @@ var deserializedData = YamlSerializer.Deserialize<MyData>(bytes.AsMemory());
 
 ```csharp
 // Write file 
-var bytes = NativeFile.ReadAllBytes("/path/to/file");
+var bytes = NativeFile.WriteAllBytes("/path/to/file", nativeArray);
 
-// Write file async (only threadpool)
+// Write file async (only for threadpool)
+var bytes = await NativeFile.WriteAllBytesAsync("/path/to/file", nativeArray);
 ```
 
 ### NativeArrayBufferWriter
 
+`Unio.NativeArrayBufferWriter<T>` is a [IBufferWriter<T>](https://learn.microsoft.com/dotnet/api/system.buffers.ibufferwriter-1)
+.
 
-Serialization example:
+It functions as a variable length buffer using NativeArray.  
+It is useful to use `IBufferWriter<T>` as input to a library that accepts it.
 
 ```csharp
-// Unio provides IBufferWriter<byte> implementation for NativeArray<byte>. 
-var bufferWriter = new NativeArrayBufferWriter<byte>(InitialBufferSize);
+using var bufferWriter = new NativeArrayBufferWriter<byte>(InitialBufferSize);
 
 // System.Text.Json
 var jsonWriter = new Utf8JsonWriter(arrayBufferWriter);
-JsonSerializer.Serialize(jsonWriter, data, typeof(D), SourceGenerationContext.Default);
+JsonSerializer.Serialize(jsonWriter, data);
 
-// Unio provides a way to read files into NativeArray<byte>.
-using var bytes = NativeFile.ReadAllBytes("/path/to/file");
+// MemoryPack
+using var state = MemoryPackWriterOptionalStatePool.Rent(MemoryPackSerializerOptions.Default);
+var writer = new MemoryPackWriter<ArrayBufferWriter<byte>>(ref arrayBufferWriter, state);
+MemoryPackSerializer.Serialize(ref writer, in data);
 
-// Unio provides a way to read files into NativeArray<byte>.
-var deserializedData = YamlSerializer.Deserialize<MyData>(bytes.AsMemory());
+// VYaml
+YamlSerializer.Serialize(bufferWriter, data);
 ```
 
-The Unity engine provides an API that directly accepts NativeArray<byte>.
-These APIs are useful when dynamic, unspecified texture loading is required, which cannot be pre-built as an asset.
+The buffer can be obtained as a `NativeArray<byte>`. This can be written to a file using `Unio.NativeFile`.
 
 ```csharp
-var texture = new Texture2D(1024, 1024, TextureFormat.RGBA32, false);
-texture.LoadRawTextureData(bytes);
+var nativeArray = bufferWriter.WrittenBuffer;
+NativeFile.WriteAllBytes("/path/to/file", nativeArray);
 ```
 
 ### Unity Assets Integrations
 
-
+The Unity engine provides an API that directly accepts `NativeArray<byte>`.
+These APIs are useful when dynamic, unspecified texture loading is required, which cannot be pre-built as an asset.
 
 ```csharp
 var textAsset = async Addressable.LoadAssetAsync<TextAsset>(assetPath);
-var bytes = textAsset.Data().AsMemory();
+var bytes = textAsset.GetData<byte>();
+YamlSerializer.Deserialize<MyData>(bytes.AsMemory());
 ```
 
-UnityWebRequest
+```csharp
+var request = UnityWebRequest.Get(url);
+```
+
+There is also an API that takes a `NativeArray<byte>` as input.
 
 ## LICENSE
 
