@@ -10,7 +10,6 @@ using Unity.PerformanceTesting;
 using UnityEngine;
 using MemoryPack;
 using UnityEngine.Profiling;
-using UnityEngine.Scripting;
 
 namespace Unio.Benchmark
 {
@@ -60,6 +59,7 @@ namespace Unio.Benchmark
                     }
                 });
             }
+
             return result;
         }
 
@@ -81,118 +81,113 @@ namespace Unio.Benchmark
         const int Iterations = 1;
         const int InitialBufferSize = 1024;
 
-        // [Test]
-        // [Performance]
-        // public void ReadAllBytes()
-        // {
-        //     var filePath = Path.Combine(Application.dataPath, "Unio.Tests", "image_1mb.gif");
-        //
-        //     Measure.Method(() =>
-        //         {
-        //             File.ReadAllBytes(filePath);
-        //         })
-        //         .SampleGroup("System.IO.File")
-        //         .WarmupCount(Warmup)
-        //         .IterationsPerMeasurement(Iterations)
-        //         .MeasurementCount(10)
-        //         .GC()
-        //         .Run();
-        //
-        //     Measure.Method(() =>
-        //         {
-        //             NativeFile.ReadAllBytes(filePath);
-        //         })
-        //         .SampleGroup("Unio.NativeFile")
-        //         .WarmupCount(Warmup)
-        //         .IterationsPerMeasurement(Iterations)
-        //         .MeasurementCount(10)
-        //         .GC()
-        //         .Run();
-        // }
-        //
-        // [Test]
-        // [Performance]
-        // public void SystemTextJsonSerialize()
-        // {
-        //     var data = D.CreateTestData();
-        //
-        //     Measure.Method(() =>
-        //         {
-        //             var arrayBufferWriter = new ArrayBufferWriter<byte>(InitialBufferSize);
-        //             var jsonWriter = new Utf8JsonWriter(arrayBufferWriter);
-        //             JsonSerializer.Serialize(jsonWriter, data, typeof(D), SourceGenerationContext.Default);
-        //         })
-        //         .SampleGroup("System.Buffers.ArrayBufferWriter")
-        //         .WarmupCount(Warmup)
-        //         .IterationsPerMeasurement(Iterations)
-        //         .MeasurementCount(5)
-        //         .GC()
-        //         .Run();
-        //
-        //     Measure.Method(() =>
-        //         {
-        //             using var arrayBufferWriter = new NativeArrayBufferWriter<byte>(InitialBufferSize, Allocator.Temp);
-        //             var jsonWriter = new Utf8JsonWriter(arrayBufferWriter);
-        //             JsonSerializer.Serialize(jsonWriter, data, typeof(D), SourceGenerationContext.Default);
-        //         })
-        //         .SampleGroup("Unio.NativeArrayBufferWriter")
-        //         .WarmupCount(Warmup)
-        //         .IterationsPerMeasurement(Iterations)
-        //         .MeasurementCount(5)
-        //         .GC()
-        //         .Run();
-        // }
-        //
-        // [Test]
-        // [Performance]
-        // public void MemoryPackSerialize()
-        // {
-        //     var data = D.CreateTestData();
-        //
-        //     Measure.Method(() =>
-        //         {
-        //             var arrayBufferWriter = new ArrayBufferWriter<byte>(InitialBufferSize);
-        //             var state = MemoryPackWriterOptionalStatePool.Rent(MemoryPackSerializerOptions.Default);
-        //             var writer = new MemoryPackWriter<ArrayBufferWriter<byte>>(ref arrayBufferWriter, state);
-        //             MemoryPackSerializer.Serialize(ref writer, in data);
-        //         })
-        //         .SampleGroup("System.Buffers.ArrayBufferWriter")
-        //         .WarmupCount(Warmup)
-        //         .IterationsPerMeasurement(Iterations)
-        //         .MeasurementCount(5)
-        //         .GC()
-        //         .Run();
-        //
-        //     Measure.Method(() =>
-        //         {
-        //             var arrayBufferWriter = new NativeArrayBufferWriter<byte>(InitialBufferSize, Allocator.Temp);
-        //             var state = MemoryPackWriterOptionalStatePool.Rent(MemoryPackSerializerOptions.Default);
-        //             var writer = new MemoryPackWriter<NativeArrayBufferWriter<byte>>(ref arrayBufferWriter, state);
-        //             MemoryPackSerializer.Serialize(ref writer, in data);
-        //         })
-        //         .SampleGroup("Unio.NativeArrayBufferWriter")
-        //         .WarmupCount(Warmup)
-        //         .IterationsPerMeasurement(Iterations)
-        //         .MeasurementCount(5)
-        //         .GC()
-        //         .Run();
-        // }
+        string filePath = default!;
+        D data = D.CreateTestData();
+
+        [SetUp]
+        public void SetUp()
+        {
+            filePath = Path.Combine(Application.dataPath, "Unio.Tests", "image_1mb.gif");
+        }
+
+        [Test]
+        [Performance]
+        public void ReadAllBytes()
+        {
+            Measure.Method(() => { File.ReadAllBytes(filePath); })
+                .SampleGroup("System.IO.File")
+                .WarmupCount(Warmup)
+                .IterationsPerMeasurement(Iterations)
+                .MeasurementCount(10)
+                .GC()
+                .Run();
+
+            Measure.Method(() => { NativeFile.ReadAllBytes(filePath); })
+                .SampleGroup("Unio.NativeFile")
+                .WarmupCount(Warmup)
+                .IterationsPerMeasurement(Iterations)
+                .MeasurementCount(10)
+                .GC()
+                .Run();
+        }
+
+        [Test]
+        [Performance]
+        public void SystemTextJsonSerialize()
+        {
+            Measure.Method(() =>
+                {
+                    var arrayBufferWriter = new ArrayBufferWriter<byte>(InitialBufferSize);
+                    var jsonWriter = new Utf8JsonWriter(arrayBufferWriter);
+                    JsonSerializer.Serialize(jsonWriter, data, typeof(D), SourceGenerationContext.Default);
+                })
+                .SampleGroup("System.Buffers.ArrayBufferWriter")
+                .WarmupCount(Warmup)
+                .IterationsPerMeasurement(Iterations)
+                .MeasurementCount(5)
+                .GC()
+                .Run();
+
+            Measure.Method(() =>
+                {
+                    using var arrayBufferWriter = new NativeArrayBufferWriter<byte>(InitialBufferSize, Allocator.Temp);
+                    var jsonWriter = new Utf8JsonWriter(arrayBufferWriter);
+                    JsonSerializer.Serialize(jsonWriter, data, typeof(D), SourceGenerationContext.Default);
+                })
+                .SampleGroup("Unio.NativeArrayBufferWriter")
+                .WarmupCount(Warmup)
+                .IterationsPerMeasurement(Iterations)
+                .MeasurementCount(5)
+                .GC()
+                .Run();
+        }
+
+        [Test]
+        [Performance]
+        public void MemoryPackSerialize()
+        {
+            Measure.Method(() =>
+                {
+                    var arrayBufferWriter = new ArrayBufferWriter<byte>(InitialBufferSize);
+                    var state = MemoryPackWriterOptionalStatePool.Rent(MemoryPackSerializerOptions.Default);
+                    var writer = new MemoryPackWriter<ArrayBufferWriter<byte>>(ref arrayBufferWriter, state);
+                    MemoryPackSerializer.Serialize(ref writer, in data);
+                })
+                .SampleGroup("System.Buffers.ArrayBufferWriter")
+                .WarmupCount(Warmup)
+                .IterationsPerMeasurement(Iterations)
+                .MeasurementCount(5)
+                .GC()
+                .Run();
+
+            Measure.Method(() =>
+                {
+                    var arrayBufferWriter = new NativeArrayBufferWriter<byte>(InitialBufferSize, Allocator.Temp);
+                    var state = MemoryPackWriterOptionalStatePool.Rent(MemoryPackSerializerOptions.Default);
+                    var writer = new MemoryPackWriter<NativeArrayBufferWriter<byte>>(ref arrayBufferWriter, state);
+                    MemoryPackSerializer.Serialize(ref writer, in data);
+                })
+                .SampleGroup("Unio.NativeArrayBufferWriter")
+                .WarmupCount(Warmup)
+                .IterationsPerMeasurement(Iterations)
+                .MeasurementCount(5)
+                .GC()
+                .Run();
+        }
+
 
         [Test]
         [Performance]
         public void ReadAllBytes2()
         {
-            var filePath = Path.Combine(Application.dataPath, "Unio.Tests", "image_1mb.gif");
-
             for (var i = 0; i < Warmup; i++)
             {
-                NativeFile.ReadAllBytes(filePath);
                 File.ReadAllBytes(filePath);
+                NativeFile.ReadAllBytes(filePath);
             }
 
             {
                 GC.Collect();
-
                 var allocBytesBefore = Profiler.GetMonoUsedSizeLong();
                 using (Measure.Scope("System.IO.File"))
                 {
@@ -201,8 +196,9 @@ namespace Unio.Benchmark
                         File.ReadAllBytes(filePath);
                     }
                 }
+
                 var allocBytesAfter = Profiler.GetMonoUsedSizeLong() - allocBytesBefore;
-                var sampleGroup = new SampleGroup("System.IO.File.TotalAllocatedMemory", SampleUnit.Kilobyte, false);
+                var sampleGroup = new SampleGroup("System.IO.File", SampleUnit.Kilobyte, false);
                 Measure.Custom(sampleGroup, allocBytesAfter / 1024f);
             }
 
@@ -216,8 +212,10 @@ namespace Unio.Benchmark
                         NativeFile.ReadAllBytes(filePath);
                     }
                 }
+
                 var allocBytesAfter = Profiler.GetMonoUsedSizeLong() - allocBytesBefore;
-                var sampleGroup = new SampleGroup("Unio.NativeFile.TotalAllocatedMemory", SampleUnit.Kilobyte, false);
+                var sampleGroup = new SampleGroup("Unio.NativeFile", SampleUnit.Kilobyte,
+                    false);
                 Measure.Custom(sampleGroup, allocBytesAfter / 1024f);
             }
         }
@@ -226,26 +224,24 @@ namespace Unio.Benchmark
         [Performance]
         public void SystemTextJsonSerialize2()
         {
-            void JsonSerializeArrayBufferWriter(D data)
+            void JsonSerializeArrayBufferWriter()
             {
                 var arrayBufferWriter = new ArrayBufferWriter<byte>(InitialBufferSize);
                 var jsonWriter = new Utf8JsonWriter(arrayBufferWriter);
                 JsonSerializer.Serialize(jsonWriter, data, typeof(D), SourceGenerationContext.Default);
             }
 
-            void JsonSerializeNativeArrayBufferWriter(D data)
+            void JsonSerializeNativeArrayBufferWriter()
             {
                 var arrayBufferWriter = new NativeArrayBufferWriter<byte>(InitialBufferSize, Allocator.Temp);
                 var jsonWriter = new Utf8JsonWriter(arrayBufferWriter);
                 JsonSerializer.Serialize(jsonWriter, data, typeof(D), SourceGenerationContext.Default);
             }
 
-            var data = D.CreateTestData();
-
             for (var i = 0; i < Warmup; i++)
             {
-                JsonSerializeArrayBufferWriter(data);
-                JsonSerializeNativeArrayBufferWriter(data);
+                JsonSerializeArrayBufferWriter();
+                JsonSerializeNativeArrayBufferWriter();
             }
 
             {
@@ -255,9 +251,10 @@ namespace Unio.Benchmark
                 {
                     for (var i = 0; i < Iterations; i++)
                     {
-                        JsonSerializeArrayBufferWriter(data);
+                        JsonSerializeArrayBufferWriter();
                     }
                 }
+
                 var allocBytesAfter = Profiler.GetMonoUsedSizeLong() - allocBytesBefore;
                 var sampleGroup = new SampleGroup("ArrayBufferWriter.TotalAllocatedMemory", SampleUnit.Kilobyte, false);
                 Measure.Custom(sampleGroup, allocBytesAfter / 1024f);
@@ -270,11 +267,13 @@ namespace Unio.Benchmark
                 {
                     for (var i = 0; i < Iterations; i++)
                     {
-                        JsonSerializeNativeArrayBufferWriter(data);
+                        JsonSerializeNativeArrayBufferWriter();
                     }
                 }
+
                 var allocBytesAfter = Profiler.GetMonoUsedSizeLong() - allocBytesBefore;
-                var sampleGroup = new SampleGroup("NativeArrayBufferWriter.TotalAllocatedMemory", SampleUnit.Kilobyte, false);
+                var sampleGroup = new SampleGroup("NativeArrayBufferWriter.TotalAllocatedMemory", SampleUnit.Kilobyte,
+                    false);
                 Measure.Custom(sampleGroup, allocBytesAfter / 1024f);
             }
         }
@@ -283,7 +282,7 @@ namespace Unio.Benchmark
         [Performance]
         public void MemoryPackSerialize2()
         {
-            void MemoryPackSerializeArrayBufferWriter(D data)
+            void MemoryPackSerializeArrayBufferWriter()
             {
                 var arrayBufferWriter = new ArrayBufferWriter<byte>(InitialBufferSize);
                 var state = MemoryPackWriterOptionalStatePool.Rent(MemoryPackSerializerOptions.Default);
@@ -291,7 +290,7 @@ namespace Unio.Benchmark
                 MemoryPackSerializer.Serialize(ref writer, in data);
             }
 
-            void MemoryPackSerializeNativeArrayBufferWriter(D data)
+            void MemoryPackSerializeNativeArrayBufferWriter()
             {
                 var arrayBufferWriter = new NativeArrayBufferWriter<byte>(InitialBufferSize, Allocator.Temp);
                 var state = MemoryPackWriterOptionalStatePool.Rent(MemoryPackSerializerOptions.Default);
@@ -299,12 +298,10 @@ namespace Unio.Benchmark
                 MemoryPackSerializer.Serialize(ref writer, in data);
             }
 
-            var data = D.CreateTestData();
-
             for (var i = 0; i < Warmup; i++)
             {
-                MemoryPackSerializeArrayBufferWriter(data);
-                MemoryPackSerializeNativeArrayBufferWriter(data);
+                MemoryPackSerializeArrayBufferWriter();
+                MemoryPackSerializeNativeArrayBufferWriter();
             }
 
             {
@@ -314,9 +311,10 @@ namespace Unio.Benchmark
                 {
                     for (var i = 0; i < Iterations; i++)
                     {
-                        MemoryPackSerializeArrayBufferWriter(data);
+                        MemoryPackSerializeArrayBufferWriter();
                     }
                 }
+
                 var allocBytesAfter = Profiler.GetMonoUsedSizeLong() - allocBytesBefore;
                 var sampleGroup = new SampleGroup("ArrayBufferWriter.TotalAllocatedMemory", SampleUnit.Kilobyte, false);
                 Measure.Custom(sampleGroup, allocBytesAfter / 1024f);
@@ -329,11 +327,13 @@ namespace Unio.Benchmark
                 {
                     for (var i = 0; i < Iterations; i++)
                     {
-                        MemoryPackSerializeNativeArrayBufferWriter(data);
+                        MemoryPackSerializeNativeArrayBufferWriter();
                     }
                 }
+
                 var allocBytesAfter = Profiler.GetMonoUsedSizeLong() - allocBytesBefore;
-                var sampleGroup = new SampleGroup("NativeArrayBufferWriter.TotalAllocatedMemory", SampleUnit.Kilobyte, false);
+                var sampleGroup = new SampleGroup("NativeArrayBufferWriter.TotalAllocatedMemory", SampleUnit.Kilobyte,
+                    false);
                 Measure.Custom(sampleGroup, allocBytesAfter / 1024f);
             }
         }
