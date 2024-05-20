@@ -11,6 +11,11 @@ namespace Unio
         {
             return new NativeArrayMemoryManager<T>((T*)nativeArray.GetUnsafeReadOnlyPtr(), nativeArray.Length).Memory;
         }
+
+        public static unsafe Memory<T> AsMemory<T>(this NativeArray<T>.ReadOnly nativeArray) where T : unmanaged
+        {
+            return new NativeArrayMemoryManager<T>((T*)nativeArray.GetUnsafeReadOnlyPtr(), nativeArray.Length).Memory;
+        }
     }
 
     unsafe class NativeArrayMemoryManager<T> : MemoryManager<T> where T : unmanaged

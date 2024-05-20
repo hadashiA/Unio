@@ -152,19 +152,42 @@ NativeFile.WriteAllBytes("/path/to/file", nativeArray);
 ### Unity Assets Integrations
 
 The Unity engine provides an API that directly accepts `NativeArray<byte>`.
-These APIs are useful when dynamic, unspecified texture loading is required, which cannot be pre-built as an asset.
 
 ```csharp
+// Example of loading a yaml text from Addressable.
 var textAsset = async Addressable.LoadAssetAsync<TextAsset>(assetPath);
-var bytes = textAsset.GetData<byte>();
+
+// Unio provides a extension to get Memory<byte> from NativeArray<byte>
+var bytes = textAsset.GetData<byte>().AsMemory();
+
+YamlSerializer.Deserialize<MyData>(bytes);
+```
+
+```csharp
+// Example of loading a yaml text from url.
+using var request = UnityWebRequest.Get(url);
+while (!request.isDone)
+{
+    yield return req.SendWebRequest();
+}
+
+// Unio provides a extension to get Memory<byte> from NativeArray<byte>
+var bytes = request.downloadHandler.nativeData.AsMemory();
 YamlSerializer.Deserialize<MyData>(bytes.AsMemory());
 ```
 
 ```csharp
-var request = UnityWebRequest.Get(url);
+// Texture2D, for example, has the ability to get/set with NativeArray<byte>.
+
+var data = texture.GetRawTextureData<byte>();
+NativeFile.WriteAllBytes("/path/to/file", data);
+
+var savedData = NativeFile.ReadAllBytes("/path/to/file");
+var texture2D = new Texture2D(w, h, format, mipChain); // Restore 
+texture2D.LoadRawTextureData(savedData);
+texture2D.Apply();
 ```
 
-There is also an API that takes a `NativeArray<byte>` as input.
 
 ## LICENSE
 
