@@ -91,7 +91,7 @@ using var bytes = await NativeFile.ReadAllBytesAsync("/path/to/file", Synchoniza
 
 
 > [!NOTE]
-> If you are using Unity less than 2023.1, the async method will use `Task<T>`, not `Awaitalbe<T>`.
+> If you are using Unity older than 2023.1, the async method will use `Task<T>`, not `Awaitalbe<T>`.
 
 In addition, a Unio extensions of `NativeArray<byte>.AsMemory()` can be used to work with modern C# APIs.
 
