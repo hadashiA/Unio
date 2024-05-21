@@ -18,8 +18,8 @@ In addition, Unio provides NativeArray extensions for interoperability with mode
 
 | Feature                      | Description                                            | 
 |:-----------------------------|--------------------------------------------------------|
-| `NativeArray<T>.AsMemory()`  | Convert `NativeArray<T>` to `System.Buffers.Memory<T>` |
-| `NativeArrayBufferWriter<T>` | `NativeArray<byte>` version of `ArrayBufferWriter<T>`. |
+| `NativeArray<T>.AsMemory()`  |  Convert to `Memory<T>`. To easy to use as `ReadOnlySequence<T>`,  |
+| `NativeArrayBufferWriter<T>` |  The `NativeArray<T>` version of `ArrayBufferWriter<T>` (`IBufferWirter<T>`). |
 
 Motivation:
 
