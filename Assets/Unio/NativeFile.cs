@@ -4,6 +4,7 @@ using System.Text;
 using System.Threading;
 using Unio.Internal;
 using Unity.Collections;
+using System.Threading.Tasks;
 using UnityEngine;
 
 #if UNITY_2023_1_OR_NEWER
@@ -17,7 +18,7 @@ using UnitTaskType = System.Threading.Tasks.Task;
 using BytesTaskType = System.Threading.Tasks.Task<Unity.Collections.NativeArray<byte>>;
 using StringTaskType = System.Threading.Tasks.Task<string>;
 using BytesCompletionSource = System.Threading.Tasks.TaskCompletionSource<Unity.Collections.NativeArray<byte>>;
-using UnitCompletionSource = UnityEngine.AwaitableCompletionSource;
+using UnitCompletionSource = System.Threading.Tasks.TaskCompletionSource<bool>;
 #endif
 
 namespace Unio
@@ -113,7 +114,11 @@ namespace Unio
                 try
                 {
                     WriteAllBytes(tuple.Item1, tuple.Item2);
-                    tuple.Item3.TrySetResult();
+#if UNITY_2023_1_OR_NEWER
+                     tuple.Item3.TrySetResult();
+#else
+                    tuple.Item3.TrySetResult(true);
+#endif
                 }
                 catch (Exception ex)
                 {
