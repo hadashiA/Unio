@@ -55,7 +55,7 @@ We want to treat the deserialization result as C# memory, but the raw data befor
 You can use add git URL from Package Manager:
 
 ```
-https://github.com/hadashiA/Unio.git?path=/Assets/Unio#0.0.1
+https://github.com/hadashiA/Unio.git?path=/Assets/Unio#0.0.2
 ```
 
 ## Usage
@@ -99,7 +99,7 @@ In addition, a Unio extensions of `NativeArray<byte>.AsMemory()` can be used to 
 using var bytes = NativeFile.ReadAllBytes("/path/to/file");
 
 // System.Text.Json
-var deserializedData = MessagePackSerializer.Deserialize<MyData>(bytes.AsMemory());
+var deserializedData = JsonSerializer.Deserialize<MyData>(bytes.AsSpan());
 
 // MessagePack-CSharp
 var deserializedData = MessagePackSerializer.Deserialize<MyData>(bytes.AsMemory());
