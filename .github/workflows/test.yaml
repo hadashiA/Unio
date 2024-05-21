@@ -1,0 +1,38 @@
+name: Test
+
+on:
+  push:
+    branches:
+    - "main"
+  pull_request:
+    branches:
+    - "main"
+
+jobs:
+  test-unity:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        unityVersion:
+        - 2022.2.21f1
+        include:
+        - unityVersion: 2022.2.21f1
+          license: UNITY_LICENSE_2022_2
+    steps: 
+    - uses: actions/checkout@v2
+    - uses: actions/cache@v2
+      with:
+        path: Library
+        key: Library-VitalRouter #-${{ matrix.unityVersion }}-${{ matrix.feature }}
+        restore-keys: |
+          Library-Unio-
+          Library-
+    - uses: game-ci/unity-test-runner@v4
+      env:
+        UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+        UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+        UNITY_LICENSE: ${{ secrets[matrix.license] }}
+      with:
+        projectPath: ./
+        githubToken: ${{ secrets.GITHUB_TOKEN }}        
+      
