@@ -12,7 +12,7 @@ namespace Unio
         public int Capacity => buffer.Length;
         public int FreeCapacity => buffer.Length - offset;
 
-        NativeArrayMemoryManager<T> memoryManager;
+        readonly NativeArrayMemoryManager<T> memoryManager;
 
         public unsafe NativeArray<T> WrittenBuffer
         {
