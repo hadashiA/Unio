@@ -107,11 +107,6 @@ namespace Unio.Internal
                 }
             }
 
-            if (!MoveNext())
-            {
-                throw new InvalidOperationException($"ReadHandle is completed but ReadHandle is not completed. {filePath} {status}");
-            }
-
             if (status != ReadStatus.Complete)
             {
                 throw new UnioIOException(filePath, status);
@@ -131,13 +126,13 @@ namespace Unio.Internal
                         readHandle.Cancel();
                     }
                     completionSource?.TrySetCanceled();
+                    return false;
                 }
                 finally
                 {
                     ReleaseHandle();
                     ReleaseBuffer();
                 }
-                return false;
             }
 
             switch (readHandle.Status)
@@ -150,7 +145,7 @@ namespace Unio.Internal
                         var result = GetResult();
                         completionSource.TrySetResult(result);
                     }
-                    break;
+                    return false;
                 }
                 case ReadStatus.Failed:
                 case ReadStatus.Truncated:
@@ -158,19 +153,20 @@ namespace Unio.Internal
                     ReleaseHandle();
                     ReleaseBuffer();
                     completionSource?.TrySetException(new UnioIOException(filePath, readHandle.Status));
-                    break;
+                    return false;
                 }
                 case ReadStatus.Canceled:
                 {
                     ReleaseHandle();
                     ReleaseBuffer();
                     completionSource?.TrySetCanceled();
-                    break;
+                    return false;
                 }
+                case ReadStatus.InProgress:
+                    return true;
                 default:
                     throw new ArgumentOutOfRangeException();
             }
-            return true;
         }
 
         void ReleaseHandle()
