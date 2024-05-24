@@ -55,7 +55,7 @@ We want to treat the deserialization result as C# memory, but the raw data befor
 You can use add git URL from Package Manager:
 
 ```
-https://github.com/hadashiA/Unio.git?path=/Assets/Unio#0.0.3
+https://github.com/hadashiA/Unio.git?path=/Assets/Unio#0.0.4
 ```
 
 ## Usage
