@@ -95,6 +95,7 @@ namespace Unio
                 if (source[i].type == beforeType)
                 {
                     insertIndex = i;
+                    break;
                 }
             }
 
@@ -103,7 +104,7 @@ namespace Unio
                 throw new ArgumentException($"{beforeType.FullName} not in system {parentSystem} {parentSystem.type.FullName}");
             }
 
-            var dest = new PlayerLoopSystem[source.Length + 2];
+            var dest = new PlayerLoopSystem[source.Length + 1];
             for (var i = 0; i < dest.Length; i++)
             {
                 if (i == insertIndex)

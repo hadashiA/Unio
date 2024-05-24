@@ -66,7 +66,6 @@ namespace Unio
                     break;
                 case SynchronizationStrategy.PlayerLoop:
                 {
-                    PlayerLoopHelper.EnsureInitialized();
                     PlayerLoopHelper.Dispatch(PlayerLoopTiming.Update, promise);
                     break;
                 }
