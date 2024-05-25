@@ -107,6 +107,12 @@ namespace Unio.Internal
                 }
             }
 
+            var continued = MoveNext();
+            if (continued)
+            {
+                throw new InvalidOperationException($"ReadHandle is completed but MoveNext is continued. {filePath} {status}");
+            }
+
             if (status != ReadStatus.Complete)
             {
                 throw new UnioIOException(filePath, status);
