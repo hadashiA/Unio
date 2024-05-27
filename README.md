@@ -108,6 +108,10 @@ var deserializedData = MessagePackSerializer.Deserialize<MyData>(bytes.AsMemory(
 var deserializedData = YamlSerializer.Deserialize<MyData>(bytes.AsMemory());
 ```
 
+> [!WARNING]
+> Note that `Memory<T>` retrieved with `NativeArray<T>.AsMemory()` should not have a lifetime longer than `NativeArray<T>`.
+When NativeArray<T> is disposed, the contents pointed to by `Memory<T>` are also destroyed.
+
 ### Write file
 
 ```csharp
