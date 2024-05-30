@@ -16,9 +16,10 @@ namespace Unio.Internal
 
         public void Run()
         {
-            for (var i = 0; i < loopItems.LastIndex; i++)
+            var span = loopItems.AsSpan();
+            for (var i = 0; i < span.Length; i++)
             {
-                var result = loopItems[i]?.MoveNext();
+                var result = span[i]?.MoveNext();
                 if (result == false)
                 {
                     loopItems.RemoveAt(i);
