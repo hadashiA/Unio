@@ -7,6 +7,13 @@ namespace Unio
 {
     public static class NativeArrayExtensions
     {
+#if !UNITY_2023_2_OR_NEWER
+        public static unsafe Span<T> AsSpan<T>(this NativeArray<T> nativeArray) where T : unmanaged
+        {
+            return new Span<T>(nativeArray.GetUnsafePtr(), nativeArray.Length);
+        }
+#endif
+
         public static unsafe Memory<T> AsMemory<T>(this NativeArray<T> nativeArray) where T : unmanaged
         {
             return new NativeArrayMemoryManager<T>((T*)nativeArray.GetUnsafeReadOnlyPtr(), nativeArray.Length).Memory;

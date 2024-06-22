@@ -48,7 +48,7 @@ namespace Unio
             var promise = new FileReadPromise(filePath);
             promise.WaitForComplete();
             using var bytes = promise.GetResult();
-            return encoding.GetString(bytes);
+            return encoding.GetString(bytes.AsSpan());
         }
 
         public static BytesTaskType ReadAllBytesAsync(string filePath, SynchronizationStrategy strategy = default, CancellationToken cancellation = default)
@@ -88,7 +88,7 @@ namespace Unio
         public static async StringTaskType ReadAllTextAsync(string filePath, Encoding encoding, SynchronizationStrategy strategy = default, CancellationToken cancellation = default)
         {
             using var bytes = await ReadAllBytesAsync(filePath, strategy, cancellation);
-            return encoding.GetString(bytes);
+            return encoding.GetString(bytes.AsSpan());
         }
 
         public static void WriteAllBytes(string filePath, NativeArray<byte> nativeArray)
